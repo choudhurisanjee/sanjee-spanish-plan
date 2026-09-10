@@ -28,15 +28,29 @@ Monday (`spanish:week:2026-09-14`). A week is built from its phase's `budget`
 the first time you open it, and is **never regenerated** after that. Editing
 `plan.js` cannot damage a week you've already started.
 
-That has one consequence worth knowing: if you change a phase's `budget`, weeks
-you've already opened keep the old one. To pull a not-yet-started week onto the
-new budget, open it and press **Reset to plan** at the bottom.
+That has one consequence worth knowing: if you change a phase's `budget` or its
+`days`, weeks you've already opened keep the old ones. To pull a not-yet-started
+week onto the new layout, open it and press **Reset to plan** at the bottom.
 
 ## Editing `plan.js`
 
 **Change a weekly budget.** Edit the `budget` array on a phase. `count` is
 sessions per week, `targetMinutes` is each session's length. For a type marked
 `daily: true`, `count` means *days per week* instead.
+
+**Change which days things land on.** `days` on a budget entry is the default
+weekly layout, so a new week arrives already scheduled and you only move what
+differs from the norm. `0` is Monday through `6` for Sunday, one entry per
+session:
+
+```js
+{ type: "textbook", count: 3, targetMinutes: 45, days: [0, 2, 5] }  // Mon, Wed, Sat
+```
+
+Fewer days than `count` leaves the remainder in the tray, which is useful for
+"three fixed sessions and one wherever it fits". Drop `days` entirely and
+everything starts unscheduled. Daily types ignore it — they already cover the
+whole week.
 
 **Add a phase.** Copy a phase block, give it a new `id` (`"p5"` — ids are
 permanent; renumbering existing ones orphans the weeks that recorded them),

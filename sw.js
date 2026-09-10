@@ -8,7 +8,7 @@
  * background for next launch.
  */
 
-const CACHE = "espanol-v1";
+const CACHE = "espanol-v2";
 
 const SHELL = [
   "./",

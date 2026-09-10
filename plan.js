@@ -13,6 +13,11 @@
 //               your reference but is not drawn anywhere.
 //   type.daily  renders as a seven-box strip instead of N tray items, and
 //               `count` becomes "days per week" rather than "sessions".
+//   budget.days which days a new week lands on. 0=Mon … 6=Sun, one entry
+//               per session, so `count: 3, days: [0, 2, 5]` means Mon, Wed,
+//               Sat. Sessions past the end of the list start in the tray.
+//               Omit `days` to leave everything unscheduled. Daily types
+//               ignore it -- they already cover the whole week.
 
 const PLAN = {
   schemaVersion: 1,
@@ -96,9 +101,9 @@ const PLAN = {
         "Sweep all of A2 at speed. Drop anything already solid. The goal is to find the real gaps, not to relearn everything.",
       budget: [
         { type: "anki", count: 5, targetMinutes: 20 },
-        { type: "textbook", count: 3, targetMinutes: 45 },
-        { type: "listening", count: 4, targetMinutes: 30 },
-        { type: "speaking", count: 1, targetMinutes: 60 },
+        { type: "textbook", count: 3, targetMinutes: 45, days: [0, 2, 5] },
+        { type: "listening", count: 4, targetMinutes: 30, days: [1, 3, 4, 6] },
+        { type: "speaking", count: 1, targetMinutes: 60, days: [2] },
       ],
     },
     {
@@ -109,9 +114,9 @@ const PLAN = {
         "Preterite vs. imperfect until it is automatic. This is the biggest single gap and it gets the most weeks.",
       budget: [
         { type: "anki", count: 5, targetMinutes: 20 },
-        { type: "textbook", count: 3, targetMinutes: 45 },
-        { type: "listening", count: 4, targetMinutes: 30 },
-        { type: "speaking", count: 2, targetMinutes: 60 },
+        { type: "textbook", count: 3, targetMinutes: 45, days: [0, 2, 5] },
+        { type: "listening", count: 4, targetMinutes: 30, days: [1, 3, 4, 6] },
+        { type: "speaking", count: 2, targetMinutes: 60, days: [2, 6] },
       ],
     },
     {
@@ -122,10 +127,10 @@ const PLAN = {
         "Present subjunctive, and the start of writing under time. Week 10 decides which exam you register for.",
       budget: [
         { type: "anki", count: 5, targetMinutes: 20 },
-        { type: "textbook", count: 3, targetMinutes: 45 },
-        { type: "listening", count: 3, targetMinutes: 30 },
-        { type: "speaking", count: 2, targetMinutes: 60 },
-        { type: "writing", count: 1, targetMinutes: 30 },
+        { type: "textbook", count: 3, targetMinutes: 45, days: [0, 2, 5] },
+        { type: "listening", count: 3, targetMinutes: 30, days: [1, 3, 6] },
+        { type: "speaking", count: 2, targetMinutes: 60, days: [2, 6] },
+        { type: "writing", count: 1, targetMinutes: 30, days: [5] },
       ],
     },
     {
@@ -136,10 +141,10 @@ const PLAN = {
         "Hold the habit through the holidays. Reduced volume by design — week 15 is Christmas and is meant to be light.",
       budget: [
         { type: "anki", count: 5, targetMinutes: 20 },
-        { type: "textbook", count: 2, targetMinutes: 45 },
-        { type: "listening", count: 3, targetMinutes: 30 },
-        { type: "speaking", count: 1, targetMinutes: 60 },
-        { type: "writing", count: 1, targetMinutes: 30 },
+        { type: "textbook", count: 2, targetMinutes: 45, days: [0, 3] },
+        { type: "listening", count: 3, targetMinutes: 30, days: [1, 4, 6] },
+        { type: "speaking", count: 1, targetMinutes: 60, days: [2] },
+        { type: "writing", count: 1, targetMinutes: 30, days: [5] },
       ],
     },
   ],

@@ -129,6 +129,16 @@ function blankWeek(key, phase) {
   };
 }
 
+/* The nth session of a budget entry lands on the nth day in `days`, so a
+   fresh week arrives already laid out and you only move what differs from
+   the norm. Missing, short, or invalid `days` just leaves it in the tray —
+   which is the old behaviour, so a budget without `days` still works. */
+function defaultDay(b, i) {
+  if (!Array.isArray(b.days)) return null;
+  const d = b.days[i];
+  return Number.isInteger(d) && d >= 0 && d <= 6 ? d : null;
+}
+
 function materialize(key) {
   const idx = weekIndexOf(parseYmd(key));
   const phase = phaseForWeek(idx);
@@ -149,7 +159,7 @@ function materialize(key) {
     for (let i = 0; i < b.count; i++) {
       rec.items.push({
         id: uid(), type: b.type, targetMinutes: b.targetMinutes,
-        day: null, done: false, actualMinutes: null, note: "",
+        day: defaultDay(b, i), done: false, actualMinutes: null, note: "",
       });
     }
   });
