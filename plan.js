@@ -11,6 +11,10 @@
 //               orphans the weeks that recorded them.
 //   type.code   the two-letter tag the app renders. `emoji` is kept for
 //               your reference but is not drawn anywhere.
+//   type.color  the hue for this activity, used on the code, the left rule
+//               of each row, the glance strip and the progress bar.
+//               `colorDark` is the same hue lightened for dark mode.
+//               Add a type here and its colour flows through the app.
 //   type.daily  renders as a seven-box strip instead of N tray items, and
 //               `count` becomes "days per week" rather than "sessions".
 //   budget.days which days a new week lands on. 0=Mon … 6=Sun, one entry
@@ -35,6 +39,7 @@ const PLAN = {
     textbook: {
       label: "Textbook",
       code: "TB",
+      color: "#2f6f8f", colorDark: "#6fb3d2",
       emoji: "📘",
       resources: [
         { label: "Aula Internacional Plus 2 (A2) — phase 1", url: "" },
@@ -46,6 +51,7 @@ const PLAN = {
     anki: {
       label: "Anki",
       code: "AN",
+      color: "#9c6f08", colorDark: "#d6a437",
       emoji: "🃏",
       daily: true,
       resources: [
@@ -56,6 +62,7 @@ const PLAN = {
     listening: {
       label: "Listening",
       code: "LI",
+      color: "#3f7a45", colorDark: "#74b87b",
       emoji: "🎧",
       resources: [
         { label: "Dreaming Spanish — intermediate ladder", url: "https://www.dreamingspanish.com/" },
@@ -66,6 +73,7 @@ const PLAN = {
     speaking: {
       label: "Swap",
       code: "SW",
+      color: "#7d3fa8", colorDark: "#a58ae0",
       emoji: "💬",
       resources: [
         { label: "Chicago language exchange meetups", url: "https://www.meetup.com/find/?keywords=spanish%20language%20exchange&location=us--il--Chicago" },
@@ -76,6 +84,7 @@ const PLAN = {
     writing: {
       label: "Writing",
       code: "WR",
+      color: "#a8397e", colorDark: "#e08ac0",
       emoji: "✍️",
       resources: [
         { label: "DELE B1 past paper writing tasks", url: "https://examenes.cervantes.es/es/dele/preparar-prueba" },
@@ -84,6 +93,7 @@ const PLAN = {
     mock: {
       label: "Mock exam",
       code: "MO",
+      color: "#b03a2e", colorDark: "#e0806f",
       emoji: "📝",
       resources: [
         { label: "Instituto Cervantes — modelos de examen (free)", url: "https://examenes.cervantes.es/es/dele/preparar-prueba" },

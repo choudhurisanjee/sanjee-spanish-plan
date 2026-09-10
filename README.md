@@ -61,7 +61,10 @@ inline in that week and in the Progress list. Never reuse an old `id` — a
 checked milestone is stored by id.
 
 **Add an activity type.** Add a key to `activityTypes` with `label`, a
-two-letter `code`, and `resources`. Then reference it from a phase `budget`.
+two-letter `code`, a `color` / `colorDark` pair, and `resources`. Then
+reference it from a phase `budget`. The colour flows through automatically —
+the code, each row's left rule, the glance strip and the progress bar all read
+it, so there's no CSS to touch.
 A type with no budget anywhere is fine — it just won't appear until you add a
 session of it by hand. (`mock` is set up that way on purpose: the mock exams
 are milestones, not weekly sessions.)

@@ -286,6 +286,26 @@ function defaultWeekKey() {
 
 /* ── dom helpers ────────────────────────────────────────────────── */
 
+/* Types carry their own colour in plan.js, so adding one there needs no
+   CSS. Emitting real rules (rather than inline styles) lets the media
+   query handle the dark-mode swap for free. */
+function injectTypeColours() {
+  const rules = [];
+  Object.keys(PLAN.activityTypes).forEach(function (k) {
+    const key = k.replace(/[^a-zA-Z0-9_-]/g, "");
+    const t = PLAN.activityTypes[k];
+    if (!key || !t.color) return;
+    rules.push('[data-t="' + key + '"]{--tc:' + t.color + '}');
+    if (t.colorDark) {
+      rules.push('@media (prefers-color-scheme:dark){[data-t="' + key +
+        '"]{--tc:' + t.colorDark + '}}');
+    }
+  });
+  const style = document.createElement("style");
+  style.textContent = rules.join("\n");
+  document.head.appendChild(style);
+}
+
 function el(tag, cls, text) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -340,6 +360,56 @@ function renderHeader() {
 
 /* ── week screen ────────────────────────────────────────────────── */
 
+/* Week at a glance: one column per day, one cell per session, filled when
+   done. It answers "what shape is this week and where am I in it" without
+   scrolling past seven day headers. Tapping a column jumps to that day. */
+function renderGlance(rec, monday) {
+  const tot = weekTotals(rec);
+  const wrap = el("div", "glance");
+  const strip = el("div", "g-strip");
+  const todayIdx = sameWeek(monday) ? (today().getDay() + 6) % 7 : -1;
+  const dailyKeys = Object.keys(rec.daily || {});
+
+  for (let d = 0; d < 7; d++) {
+    const col = el("button", "g-day" + (d === todayIdx ? " today" : ""));
+    col.type = "button";
+    col.setAttribute("aria-label", "Jump to " + DAY_NAMES[d]);
+    col.appendChild(el("span", "g-l", DAY_NAMES[d][0]));
+
+    const cells = el("span", "g-cells");
+    rec.items.filter(function (it) { return it.day === d; }).forEach(function (it) {
+      const c = el("span", "g-c" + (it.done ? " done" : ""));
+      c.dataset.t = it.type;
+      cells.appendChild(c);
+    });
+    col.appendChild(cells);
+
+    dailyKeys.forEach(function (k) {
+      const bar = el("span", "g-an" + (rec.daily[k].days[d] ? " on" : ""));
+      bar.dataset.t = k;
+      col.appendChild(bar);
+    });
+
+    col.addEventListener("click", function () {
+      const head = document.getElementById("day-" + d);
+      if (head) head.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+    strip.appendChild(col);
+  }
+  wrap.appendChild(strip);
+
+  const tally = el("div", "g-tally");
+  const v = el("span", "v");
+  v.appendChild(document.createTextNode(hrs(tot.actual) + " / " + hrs(tot.target) + " "));
+  v.appendChild(el("span", "k", "hrs"));
+  tally.appendChild(v);
+  tally.appendChild(el("span", "k", tot.target
+    ? Math.round(tot.actual / tot.target * 100) + "% of plan"
+    : "nothing planned"));
+  wrap.appendChild(tally);
+  return wrap;
+}
+
 function renderWeek() {
   const out = frag();
   const key = state.weekKey;
@@ -369,21 +439,12 @@ function renderWeek() {
   out.appendChild(nav);
 
   /* phase focus + tally */
+  if (rec) out.appendChild(renderGlance(rec, monday));
+
   const focus = el("div", "focus");
   focus.appendChild(el("div", "ph", phase ? "Focus" : "Outside the plan"));
   focus.appendChild(el("div", "fl", phase ? phase.focus :
     "This week isn't part of the plan. Anything you add here still counts toward nothing — it's just a scratch week."));
-
-  if (rec) {
-    const tot = weekTotals(rec);
-    const tally = el("div", "tally");
-    const v = el("span", "v");
-    v.appendChild(document.createTextNode(hrs(tot.actual) + " / " + hrs(tot.target) + " "));
-    v.appendChild(el("span", "k", "hrs"));
-    tally.appendChild(v);
-    tally.appendChild(el("span", "k", tot.target ? Math.round(tot.actual / tot.target * 100) + "%" : "—"));
-    focus.appendChild(tally);
-  }
   out.appendChild(focus);
 
   /* milestones landing in this week */
@@ -417,6 +478,7 @@ function renderWeek() {
     d.days.forEach(function (on, i) {
       const b = el("button", "bx" + (on ? " on" : "") + (i === todayIdx ? " today" : ""), DAY_NAMES[i][0]);
       b.type = "button";
+      b.dataset.t = t;
       b.setAttribute("aria-pressed", String(on));
       b.setAttribute("aria-label", type.label + ", " + DAY_NAMES[i]);
       b.addEventListener("click", function () {
@@ -451,6 +513,7 @@ function renderWeek() {
     const mins = dayItems.reduce(function (s, it) { return s + itemActual(it); }, 0);
 
     const head = el("div", "day" + (isToday ? " today" : ""));
+    head.id = "day-" + i;
     head.appendChild(el("span", null, DAY_NAMES[i] + " " + String(date.getDate()).padStart(2, "0") + (isToday ? " · Today" : "")));
     head.appendChild(el("span", "d-r", mins ? hrs(mins) + " hrs" : "—"));
     out.appendChild(head);
@@ -500,6 +563,7 @@ function itemRow(it, rec) {
   const type = typeOf(it.type);
   const row = el("div", "row" + (it.done ? " done" : "") + (state.flashId === it.id ? " flash" : ""));
   row.dataset.id = it.id;
+  row.dataset.t = it.type;
 
   const box = el("button", "bx", it.done ? "[×]" : "[ ]");
   box.type = "button";
@@ -599,6 +663,7 @@ function renderProgress() {
     const d = s.byType[t];
     const type = typeOf(t);
     const row = el("div", "bar-row");
+    row.dataset.t = t;
     const top = el("div", "bar-top");
     top.appendChild(el("span", "lb", type.code + " " + type.label));
     top.appendChild(el("span", "vl", hrs(d.actual) + " / " + hrs(d.target)));
@@ -899,7 +964,9 @@ function openItemSheet(id) {
     const type = typeOf(it.type);
     const out = frag();
 
-    out.appendChild(sheetHeader(type.code + " · " + type.label));
+    const sh = sheetHeader(type.code + " · " + type.label);
+    sh.dataset.t = it.type;
+    out.appendChild(sh);
 
     /* day assignment -- seven chips on one row, unassign is its own control */
     const dayField = el("div", "field");
@@ -1216,6 +1283,7 @@ function renderSyncDot() {
 /* ── init ───────────────────────────────────────────────────────── */
 
 function init() {
+  injectTypeColours();
   state.weekKey = defaultWeekKey();
 
   Sync.init({
