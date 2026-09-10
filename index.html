@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Español</title>
+
+<meta name="description" content="Personal Spanish study tracker.">
+<meta name="theme-color" content="#f4f3ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131315" media="(prefers-color-scheme: dark)">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Español">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="hdr-title">ESPAÑOL</div>
+      <div class="hdr-sub" id="hdrSub">&nbsp;</div>
+    </div>
+    <div class="hdr-r">
+      <button type="button" class="sync-dot" id="syncDot" title="Sync status" aria-live="polite">
+        <span class="dot" aria-hidden="true"></span><span class="sync-txt" id="syncTxt">off</span>
+      </button>
+      <div class="goal" id="goal"></div>
+    </div>
+  </header>
+
+  <main class="scroll" id="screen"></main>
+
+  <nav class="tabs" id="tabs">
+    <button type="button" class="tab on" data-tab="week">Week</button>
+    <button type="button" class="tab" data-tab="progress">Progress</button>
+  </nav>
+
+</div>
+
+<div class="sheet-scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Edit session"></section>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="plan.js"></script>
+<script src="sync.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

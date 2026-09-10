@@ -1,0 +1,493 @@
+<title>Spanish tracker — design direction</title>
+<style>
+  :root {
+    --paper:      #f4f3ef;
+    --card:       #fbfaf7;
+    --ink:        #1b1b19;
+    --ink-soft:   #4a4945;
+    --muted:      #8b8981;
+    --rule:       #dedcd4;
+    --rule-hard:  #b9b6ac;
+    --accent:     #3b3f9e;
+    --accent-dim: #e6e6f4;
+
+    --t-gr: #2f6f8f;
+    --t-an: #9c6f08;
+    --t-li: #3f7a45;
+    --t-sp: #6b4ca8;
+    --t-mo: #a8402f;
+
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:      #131315;
+      --card:       #1a1a1d;
+      --ink:        #e9e7e1;
+      --ink-soft:   #b5b2aa;
+      --muted:      #77746c;
+      --rule:       #2c2c2f;
+      --rule-hard:  #46464a;
+      --accent:     #9095f2;
+      --accent-dim: #262742;
+
+      --t-gr: #6fb3d2;
+      --t-an: #d6a437;
+      --t-li: #74b87b;
+      --t-sp: #a58ae0;
+      --t-mo: #e0806f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #131315; --card: #1a1a1d; --ink: #e9e7e1; --ink-soft: #b5b2aa;
+    --muted: #77746c; --rule: #2c2c2f; --rule-hard: #46464a;
+    --accent: #9095f2; --accent-dim: #262742;
+    --t-gr: #6fb3d2; --t-an: #d6a437; --t-li: #74b87b; --t-sp: #a58ae0; --t-mo: #e0806f;
+  }
+  :root[data-theme="light"] {
+    --paper: #f4f3ef; --card: #fbfaf7; --ink: #1b1b19; --ink-soft: #4a4945;
+    --muted: #8b8981; --rule: #dedcd4; --rule-hard: #b9b6ac;
+    --accent: #3b3f9e; --accent-dim: #e6e6f4;
+    --t-gr: #2f6f8f; --t-an: #9c6f08; --t-li: #3f7a45; --t-sp: #6b4ca8; --t-mo: #a8402f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .lede { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede p { margin: 0; max-width: 62ch; color: var(--ink-soft); }
+
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .note { background: var(--card); padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; }
+  .note h2 {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 500;
+  }
+  .note p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  .controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .controls .label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .seg { display: flex; border: 1px solid var(--rule-hard); }
+  .seg button {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 9px 14px; min-height: 40px;
+    background: transparent; color: var(--ink-soft); border: 0; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--rule-hard); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .frames { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+
+  .frame { display: flex; flex-direction: column; gap: 10px; flex: 1 1 320px; min-width: 0; }
+  .frame > figcaption {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ── the phone screen ── */
+  .screen {
+    width: min(390px, 100%);
+    background: var(--card);
+    border: 1px solid var(--rule-hard);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+  }
+
+  .hdr {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 12px; padding: 14px 14px 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .hdr .title { font-size: 14px; letter-spacing: 0.02em; }
+  .hdr .sub { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+  .goal { text-align: right; color: var(--accent); }
+  .goal .n { font-size: 19px; letter-spacing: -0.03em; display: block; }
+  .goal .u { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  .weeknav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 14px; border-bottom: 1px solid var(--rule);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .weeknav .arw { color: var(--muted); }
+  .weeknav .mid { color: var(--ink); }
+
+  .focus {
+    padding: 11px 14px; border-bottom: 1px solid var(--rule);
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .focus .ph { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .focus .fl { font-family: var(--sans); font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+  .focus .tally { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px; }
+  .focus .tally .v { font-size: 15px; }
+  .focus .tally .k { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  .milestone {
+    padding: 11px 14px; border-bottom: 1px solid var(--rule);
+    border-top: 1px solid var(--rule);
+    background: var(--accent-dim);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .milestone .dia { color: var(--accent); font-size: 11px; line-height: 1.5; }
+  .milestone .ms-l { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .milestone .ms-t { font-family: var(--sans); font-size: 13.5px; color: var(--ink); margin-top: 2px; }
+
+  .sec-h {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px 6px;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  }
+
+  .strip { padding: 0 14px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); }
+  .strip .boxes { display: flex; gap: 5px; flex: 1; }
+  .strip .bx {
+    flex: 1; height: 26px; border: 1px solid var(--rule-hard);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; letter-spacing: 0.06em; color: var(--muted);
+  }
+  .strip .bx.on { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .strip .bx.today { border-color: var(--ink); border-width: 2px; color: var(--ink); }
+  .strip .cnt { font-size: 11px; color: var(--muted); }
+
+  .row {
+    display: flex; align-items: baseline; gap: 9px;
+    padding: 10px 14px; border-bottom: 1px solid var(--rule);
+    border-left: 2px solid transparent;
+    min-height: 44px;
+  }
+  .row .bx { color: var(--ink-soft); flex: none; }
+  .row .code { flex: none; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); width: 20px; }
+  .row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .min { flex: none; font-size: 12px; color: var(--muted); }
+  .row.done .name { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .row.done .bx { color: var(--ink); }
+  .row.done .min { color: var(--ink-soft); }
+
+  body[data-variant="tint"] .row[data-t="gr"] { border-left-color: var(--t-gr); }
+  body[data-variant="tint"] .row[data-t="an"] { border-left-color: var(--t-an); }
+  body[data-variant="tint"] .row[data-t="li"] { border-left-color: var(--t-li); }
+  body[data-variant="tint"] .row[data-t="sp"] { border-left-color: var(--t-sp); }
+  body[data-variant="tint"] .row[data-t="mo"] { border-left-color: var(--t-mo); }
+  body[data-variant="tint"] .row[data-t="gr"] .code { color: var(--t-gr); }
+  body[data-variant="tint"] .row[data-t="an"] .code { color: var(--t-an); }
+  body[data-variant="tint"] .row[data-t="li"] .code { color: var(--t-li); }
+  body[data-variant="tint"] .row[data-t="sp"] .code { color: var(--t-sp); }
+  body[data-variant="tint"] .row[data-t="mo"] .code { color: var(--t-mo); }
+
+  .empty { padding: 10px 14px 12px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--rule); }
+
+  .day {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 14px; border-bottom: 1px solid var(--rule);
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    background: var(--paper);
+  }
+  .day.today { background: var(--ink); color: var(--paper); }
+  .day.past { color: var(--muted); }
+  .day .d-r { letter-spacing: 0.06em; }
+
+  .tabs { display: flex; border-top: 2px solid var(--ink); }
+  .tabs .tab {
+    flex: 1; text-align: center; padding: 13px 0 16px;
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+  }
+  .tabs .tab + .tab { border-left: 1px solid var(--rule); }
+  .tabs .tab.on { color: var(--ink); box-shadow: inset 0 3px 0 var(--ink); }
+
+  /* ── progress screen ── */
+  .bar-row { padding: 11px 14px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 6px; }
+  .bar-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .bar-top .lb { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .bar-top .vl { font-size: 12px; color: var(--muted); }
+  .track { height: 8px; border: 1px solid var(--rule-hard); position: relative; }
+  .fill { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
+  body[data-variant="tint"] .bar-row[data-t="gr"] .fill { background: var(--t-gr); }
+  body[data-variant="tint"] .bar-row[data-t="an"] .fill { background: var(--t-an); }
+  body[data-variant="tint"] .bar-row[data-t="li"] .fill { background: var(--t-li); }
+  body[data-variant="tint"] .bar-row[data-t="sp"] .fill { background: var(--t-sp); }
+
+  .total { padding: 14px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: flex-end; }
+  .total .big { font-size: 30px; letter-spacing: -0.03em; line-height: 1; }
+  .total .k { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  .spark { padding: 12px 14px 14px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; }
+  .spark .bars { display: flex; align-items: flex-end; gap: 3px; height: 44px; }
+  .spark .b { flex: 1; background: var(--rule-hard); }
+  .spark .b.cur { background: var(--ink); }
+  .spark .b.fut { background: transparent; border-bottom: 1px solid var(--rule-hard); }
+  .spark .axis { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  .backup { padding: 11px 14px; font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; }
+
+  .closing { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--rule); padding-top: 20px; }
+  .closing h2 {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 500;
+  }
+  .closing ul { margin: 0; padding-left: 18px; color: var(--ink-soft); font-size: 14.5px; }
+  .closing li { margin-bottom: 5px; }
+  .closing li b { color: var(--ink); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <div class="lede">
+    <div class="eyebrow">Spanish tracker · treatment 01</div>
+    <h1>The study ledger</h1>
+    <p>The triathlon plan is built out of soft colored chips and emoji — the visual grammar of a dashboard. This is the opposite bet: a ruled log book. Type does the work, color says almost nothing, and every number lines up in a column. Simpler to look at and simpler to build.</p>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h2>Type</h2>
+      <p>SF Mono for all structure, labels and figures — it ships on your phone, so there's no webfont to load and nothing to fall back from. SF Pro for the two places actual prose appears.</p>
+    </div>
+    <div class="note">
+      <h2>Color</h2>
+      <p>Paper, ink, and one blue-violet used only for the goal and milestones. Today is marked by inverting the row to solid ink, not by a hue — so nothing incomplete ever reads as an alarm.</p>
+    </div>
+    <div class="note">
+      <h2>Structure</h2>
+      <p>No cards, no shadows, no rounded corners. Hairline rules, a strict left edge, right-aligned tabular figures. Activity types are two-letter codes instead of emoji.</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="label">Type coding</span>
+    <div class="seg" role="group" aria-label="Type coding variant">
+      <button type="button" data-v="plain" aria-pressed="true">None</button>
+      <button type="button" data-v="tint" aria-pressed="false">Hairline tint</button>
+    </div>
+  </div>
+
+  <div class="frames">
+
+    <figure class="frame" style="margin:0">
+      <figcaption>Week</figcaption>
+      <div class="screen">
+
+        <div class="hdr">
+          <div>
+            <div class="title">ESPAÑOL / B2</div>
+            <div class="sub">Phase 2 · Build</div>
+          </div>
+          <div class="goal">
+            <span class="n">11</span>
+            <span class="u">wks to DELE</span>
+          </div>
+        </div>
+
+        <div class="weeknav">
+          <span class="arw">←</span>
+          <span class="mid">Week 03 · Sep 28 – Oct 04</span>
+          <span class="arw">→</span>
+        </div>
+
+        <div class="focus">
+          <div class="ph">Focus</div>
+          <div class="fl">Subjunctive in adverbial clauses; start speaking without rehearsing first.</div>
+          <div class="tally">
+            <span class="v">4.5 / 8.0 <span class="k">hrs</span></span>
+            <span class="k">56%</span>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <span class="dia">◆</span>
+          <div>
+            <div class="ms-l">Milestone · wk 03</div>
+            <div class="ms-t">First unscripted 20-minute intercambio</div>
+          </div>
+        </div>
+
+        <div class="sec-h"><span>Anki · daily</span><span>3 / 7</span></div>
+        <div class="strip">
+          <div class="boxes">
+            <span class="bx on">M</span>
+            <span class="bx on">T</span>
+            <span class="bx on today">W</span>
+            <span class="bx">T</span>
+            <span class="bx">F</span>
+            <span class="bx">S</span>
+            <span class="bx">S</span>
+          </div>
+          <span class="cnt">20m</span>
+        </div>
+
+        <div class="sec-h"><span>Unscheduled</span><span>2</span></div>
+        <div class="row" data-t="li"><span class="bx">[ ]</span><span class="code">LI</span><span class="name">Radio Ambulante — ep. 214</span><span class="min">30m</span></div>
+        <div class="row" data-t="sp"><span class="bx">[ ]</span><span class="code">SP</span><span class="name">italki — Rocío</span><span class="min">60m</span></div>
+
+        <div class="day past"><span>Mon 28</span><span class="d-r">1.25 hrs</span></div>
+        <div class="row done" data-t="gr"><span class="bx">[×]</span><span class="code">GR</span><span class="name">Subjuntivo — aunque / a pesar de</span><span class="min">50m</span></div>
+        <div class="row done" data-t="li"><span class="bx">[×]</span><span class="code">LI</span><span class="name">Easy Spanish — Madrid street</span><span class="min">25m</span></div>
+
+        <div class="day past"><span>Tue 29</span><span class="d-r">—</span></div>
+        <div class="row" data-t="gr"><span class="bx">[ ]</span><span class="code">GR</span><span class="name">Por vs para — drill set 4</span><span class="min">45m</span></div>
+
+        <div class="day today"><span>Wed 30 · Today</span><span class="d-r">1.0 hrs</span></div>
+        <div class="row done" data-t="sp"><span class="bx">[×]</span><span class="code">SP</span><span class="name">Intercambio — Marta</span><span class="min">60m</span></div>
+        <div class="row" data-t="li"><span class="bx">[ ]</span><span class="code">LI</span><span class="name">Radio Ambulante — ep. 213</span><span class="min">30m</span></div>
+
+        <div class="day"><span>Thu 01</span><span class="d-r">—</span></div>
+        <div class="empty">Nothing scheduled.</div>
+
+        <div class="day"><span>Fri 02</span><span class="d-r">—</span></div>
+        <div class="row" data-t="mo"><span class="bx">[ ]</span><span class="code">MO</span><span class="name">DELE B2 — reading, timed</span><span class="min">70m</span></div>
+
+        <div class="tabs">
+          <div class="tab on">Week</div>
+          <div class="tab">Progress</div>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="frame" style="margin:0">
+      <figcaption>Progress</figcaption>
+      <div class="screen">
+
+        <div class="hdr">
+          <div>
+            <div class="title">ESPAÑOL / B2</div>
+            <div class="sub">Week 03 of 15</div>
+          </div>
+          <div class="goal">
+            <span class="n">11</span>
+            <span class="u">wks to DELE</span>
+          </div>
+        </div>
+
+        <div class="total">
+          <div>
+            <div class="big">21.7</div>
+            <div class="k">hours logged</div>
+          </div>
+          <div style="text-align:right">
+            <div class="big">78<span style="font-size:16px">%</span></div>
+            <div class="k">of target</div>
+          </div>
+        </div>
+
+        <div class="sec-h"><span>By activity</span><span>actual / target</span></div>
+
+        <div class="bar-row" data-t="gr">
+          <div class="bar-top"><span class="lb">GR Grammar</span><span class="vl">6.8 / 6.8</span></div>
+          <div class="track"><div class="fill" style="width:100%"></div></div>
+        </div>
+        <div class="bar-row" data-t="an">
+          <div class="bar-top"><span class="lb">AN Anki</span><span class="vl">4.0 / 5.0</span></div>
+          <div class="track"><div class="fill" style="width:80%"></div></div>
+        </div>
+        <div class="bar-row" data-t="li">
+          <div class="bar-top"><span class="lb">LI Listening</span><span class="vl">5.4 / 6.0</span></div>
+          <div class="track"><div class="fill" style="width:90%"></div></div>
+        </div>
+        <div class="bar-row" data-t="sp">
+          <div class="bar-top"><span class="lb">SP Speaking</span><span class="vl">5.5 / 9.0</span></div>
+          <div class="track"><div class="fill" style="width:61%"></div></div>
+        </div>
+
+        <div class="spark">
+          <div class="axis"><span>Weekly hours</span><span>wk 01 – 15</span></div>
+          <div class="bars">
+            <span class="b" style="height:64%"></span>
+            <span class="b" style="height:88%"></span>
+            <span class="b cur" style="height:56%"></span>
+            <span class="b fut"></span><span class="b fut"></span><span class="b fut"></span>
+            <span class="b fut"></span><span class="b fut"></span><span class="b fut"></span>
+            <span class="b fut"></span><span class="b fut"></span><span class="b fut"></span>
+            <span class="b fut"></span><span class="b fut"></span><span class="b fut"></span>
+          </div>
+        </div>
+
+        <div class="sec-h"><span>Milestones</span><span>1 / 6</span></div>
+        <div class="row"><span class="bx">[×]</span><span class="code">◆</span><span class="name">Read one article without a dictionary</span><span class="min">wk 01</span></div>
+        <div class="row"><span class="bx">[ ]</span><span class="code">◆</span><span class="name">First unscripted 20-min intercambio</span><span class="min">wk 03</span></div>
+        <div class="row"><span class="bx">[ ]</span><span class="code">◆</span><span class="name">Mock exam, full reading section</span><span class="min">wk 06</span></div>
+
+        <div class="backup"><span>Last export</span><span>3 days ago</span></div>
+
+        <div class="tabs">
+          <div class="tab">Week</div>
+          <div class="tab on">Progress</div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+
+  <div class="closing">
+    <h2>What this changes</h2>
+    <ul>
+      <li><b>Emoji become two-letter codes.</b> GR / AN / LI / SP / MO. They align in a column, which emoji never do, and they stop the app from looking like every other tracker.</li>
+      <li><b>Color stops carrying meaning.</b> Done is a filled bracket and a strikethrough. Today is an inverted bar. Nothing needs a legend.</li>
+      <li><b>Anki gets a seven-box strip</b> instead of five identical items cluttering the tray — it's a daily habit, so it should look like one.</li>
+      <li><b>The build gets smaller.</b> No per-type palette, no webfont, no card shadows. Roughly forty lines of CSS carry the whole look.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  const body = document.body;
+  body.dataset.variant = "plain";
+  document.querySelectorAll(".seg button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".seg button").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
+      body.dataset.variant = btn.dataset.v;
+    });
+  });
+</script>
