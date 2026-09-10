@@ -316,6 +316,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; text-align: i
 .spark .b.cur { background: var(--ink); }
 .spark .b.fut { background: transparent; border-bottom: 1px solid var(--rule); min-height: 0; }
 .spark .axis { display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.spark-scale { display: flex; gap: 3px; }
+.spark-scale span {
+  flex: 1; text-align: center; font-size: 8px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 .phase-h {
   padding: 12px 14px 6px;

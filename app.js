@@ -245,7 +245,15 @@ function stats() {
 
   for (let i = 1; i <= PLAN.weekCount; i++) {
     const rec = Store.getWeek(ymd(mondayForWeek(i)));
-    if (i > upto) {
+
+    /* A week counts once it has started, or once there's work logged in
+       it. The second half matters: starting early, or logging ahead,
+       should never make the hours you actually did disappear. Opening a
+       week to look at it still adds nothing, because materialising it
+       creates no actuals -- which was the point of the elapsed-only rule
+       in the first place. */
+    const logged = rec ? weekTotals(rec).actual : 0;
+    if (i > upto && logged === 0) {
       weekly.push(null);
       weeklyTarget.push(rec ? weekTotals(rec).target : budgetTotals(phaseForWeek(i)).target);
       continue;
@@ -635,7 +643,7 @@ function renderProgress() {
   const out = frag();
   const s = stats();
 
-  if (s.upto === 0) {
+  if (s.target === 0 && s.actual === 0) {
     const start = mondayForWeek(1);
     const days = daysBetween(today(), start);
     const box = el("div", "focus");
@@ -709,7 +717,11 @@ function renderProgress() {
       ": " + hrs(v) + " / " + hrs(tgt) + " hrs");
     bars.appendChild(b);
   });
-  spark.append(axis, bars);
+  const scale = el("div", "spark-scale");
+  for (let i = 1; i <= PLAN.weekCount; i++) {
+    scale.appendChild(el("span", null, (i === 1 || i % 5 === 0) ? String(i) : ""));
+  }
+  spark.append(axis, bars, scale);
   out.appendChild(spark);
 
   /* milestones by phase */

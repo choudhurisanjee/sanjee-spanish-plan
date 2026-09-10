@@ -143,8 +143,10 @@ Nothing you export ever contains the GitHub token.
   the real number.
 - **A note replaces the label.** Four rows all reading "Listening" become
   useful once you write what they actually were.
-- **Progress counts elapsed weeks, not opened ones.** Browsing ahead to week 12
-  doesn't add its hours to your denominator.
+- **Progress counts a week once it has started or has work logged in it.**
+  Browsing ahead to week 12 doesn't add its hours to your denominator, because
+  materialising a week creates no actuals. But anything you actually log always
+  counts, so starting early or working ahead never makes your hours vanish.
 - **Unfinished work doesn't roll over.** A week ends and whatever's left stays
   in that week. There's no debt ledger, and nothing renders in red.
 - **One level of undo** is kept before any import or any sync that replaces

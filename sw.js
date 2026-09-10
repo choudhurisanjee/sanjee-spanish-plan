@@ -11,7 +11,7 @@
  * and reloads once the new worker takes over.
  */
 
-const CACHE = "espanol-v5";
+const CACHE = "espanol-v6";
 
 const SHELL = [
   "./",
