@@ -132,7 +132,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; text-align: i
   padding: 0 14px;
   min-height: 46px;
   border-bottom: 1px solid var(--rule);
-  border-left: 2px solid transparent;   /* reserved so nothing shifts */
+  border-left: 4px solid transparent;   /* reserved so nothing shifts */
   background: none;
 }
 .row[data-t] { border-left-color: var(--tc); }

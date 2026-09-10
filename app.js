@@ -47,7 +47,20 @@ function phaseForWeek(i) {
 function phaseById(id) {
   return PLAN.phases.find(function (p) { return p.id === id; }) || null;
 }
-function typeOf(t) { return PLAN.activityTypes[t] || { label: t, code: "??", resources: [] }; }
+/* plan.js is meant to be rewritten by hand, so a rewrite that drops
+   `code` or `color` must degrade rather than render blanks. Codes fall
+   back to the first two letters of the label; a missing colour just
+   inherits the muted default through var(--tc, ...) in the stylesheet. */
+function typeOf(t) {
+  const d = PLAN.activityTypes[t] || {};
+  const label = d.label || t;
+  return {
+    label: label,
+    code: d.code || label.slice(0, 2).toUpperCase(),
+    daily: Boolean(d.daily),
+    resources: d.resources || [],
+  };
+}
 
 function uid() {
   if (self.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -902,9 +915,21 @@ function renderSettings() {
     out.appendChild(undo);
   }
 
+  out.appendChild(sectionHead("App version"));
+
+  const ver = el("div", "linkrow");
+  ver.appendChild(el("span", "k", "Running"));
+  ver.appendChild(el("span", "v", Updates.running || "not cached yet"));
+  out.appendChild(ver);
+
+  const upd = el("div", "btn-row");
+  upd.appendChild(button("Check for updates", "btn", function () { checkForUpdates(); }));
+  out.appendChild(upd);
+
   const foot = el("div", "foot");
   foot.textContent = "Stored weeks: " + Store.weekKeys().length +
-    ". Exports never include the GitHub token.";
+    ". Exports never include the GitHub token. The app checks for a new " +
+    "version every time you switch back to it.";
   out.appendChild(foot);
 
   return out;
@@ -1082,7 +1107,7 @@ function openAddSheet() {
     const phase = phaseForWeek(idx);
 
     Object.keys(PLAN.activityTypes).forEach(function (t) {
-      const type = PLAN.activityTypes[t];
+      const type = typeOf(t);
       if (type.daily) return;
       const budgeted = phase && phase.budget.find(function (b) { return b.type === t; });
       const target = budgeted ? budgeted.targetMinutes : 30;
@@ -1330,10 +1355,82 @@ function init() {
     });
   }
 
-  if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    navigator.serviceWorker.register("sw.js").catch(function (e) {
-      console.warn("service worker failed", e);
-    });
+  setupUpdates();
+}
+
+/* ── keeping the installed app current ──────────────────────────────
+ * An iOS home-screen app resumes from a snapshot rather than reloading,
+ * so left alone it will happily run last month's code forever: nothing
+ * ever re-fetches sw.js, so a bumped CACHE is never noticed. Three
+ * things fix that -- check on launch, check on every return to the
+ * foreground, and reload once the new worker takes over.
+ */
+
+const Updates = { reg: null, running: null, reloading: false };
+
+function setupUpdates() {
+  if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
+
+  /* On a first ever visit there's no controller yet, and the worker's
+     initial claim() would otherwise read as "new version" and reload for
+     nothing. So the first claim only flips the flag; every controller
+     change after that is a genuine update. Tracking it as mutable state
+     matters -- reading it once at startup would leave the whole first
+     session unable to auto-update. */
+  let hasController = Boolean(navigator.serviceWorker.controller);
+
+  navigator.serviceWorker.addEventListener("controllerchange", function () {
+    askVersion();
+    if (!hasController) { hasController = true; return; }
+    if (Updates.reloading) return;
+    Updates.reloading = true;
+    toast("New version — reloading");
+    /* Long enough for the debounced note and minutes writes to land. */
+    setTimeout(function () { location.reload(); }, 1200);
+  });
+
+  navigator.serviceWorker
+    .register("sw.js", { updateViaCache: "none" })
+    .then(function (reg) {
+      Updates.reg = reg;
+      reg.update().catch(function () {});
+      askVersion();
+    })
+    .catch(function (e) { console.warn("service worker failed", e); });
+
+  /* The moment that actually matters on a phone: coming back to the app. */
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    if (Updates.reg) Updates.reg.update().catch(function () {});
+    askVersion();
+  });
+}
+
+/* The active cache name is the version. Reading it straight from the
+   Cache API beats messaging the worker: it's correct the moment install()
+   finishes, rather than only once a controller has claimed the page. */
+async function askVersion() {
+  if (!window.caches) return;
+  try {
+    const keys = await caches.keys();
+    const found = keys.filter(function (k) { return k.indexOf("espanol-") === 0; }).sort().pop();
+    if (found && found !== Updates.running) {
+      Updates.running = found;
+      if (state.tab === "settings") render();
+    }
+  } catch (e) { /* private mode can refuse; the row just stays blank */ }
+}
+
+/* Settings button, for when you want an answer right now. */
+async function checkForUpdates() {
+  if (!Updates.reg) { toast("No service worker — open over https"); return; }
+  toast("Checking…");
+  try {
+    await Updates.reg.update();
+    await new Promise(function (r) { setTimeout(r, 1200); });
+    if (!Updates.reloading) toast("Already up to date");
+  } catch (e) {
+    toast("Check failed — are you online?");
   }
 }
 
