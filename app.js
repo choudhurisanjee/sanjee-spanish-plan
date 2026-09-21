@@ -228,6 +228,10 @@ function budgetTotals(phase) {
    must not add its hours to the denominator. */
 function currentWeekIndex() { return weekIndexOf(mondayOf(today())); }
 
+/* The header's "of target" denominator is the whole plan's budget, held
+   constant from day one. It only ever fills up -- it never jumps when a
+   new week starts, unlike an elapsed-weeks-only denominator would. Pace
+   (am I keeping up this week) lives on the Week tab instead. */
 function stats() {
   const upto = Math.max(0, Math.min(PLAN.weekCount, currentWeekIndex()));
   const byType = {};
@@ -246,14 +250,23 @@ function stats() {
   for (let i = 1; i <= PLAN.weekCount; i++) {
     const rec = Store.getWeek(ymd(mondayForWeek(i)));
 
-    /* A week counts once it has started, or once there's work logged in
-       it. The second half matters: starting early, or logging ahead,
-       should never make the hours you actually did disappear. Opening a
-       week to look at it still adds nothing, because materialising it
-       creates no actuals -- which was the point of the elapsed-only rule
-       in the first place. */
+    /* A week counts actual hours once it has started, or once there's
+       work logged in it -- starting early, or logging ahead, should
+       never make the hours you actually did disappear. Its target
+       always counts, whether or not the week has been reached, so the
+       plan-wide denominator stays constant. */
     const logged = rec ? weekTotals(rec).actual : 0;
     if (i > upto && logged === 0) {
+      if (rec) {
+        (rec.items || []).forEach(function (it) { bump(it.type, it.targetMinutes || 0, 0); });
+        Object.keys(rec.daily || {}).forEach(function (t) {
+          const d = rec.daily[t];
+          bump(t, d.targetCount * d.targetMinutes, 0);
+        });
+      } else {
+        const b = budgetTotals(phaseForWeek(i));
+        Object.keys(b.byType).forEach(function (t) { bump(t, b.byType[t], 0); });
+      }
       weekly.push(null);
       weeklyTarget.push(rec ? weekTotals(rec).target : budgetTotals(phaseForWeek(i)).target);
       continue;
